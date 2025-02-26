@@ -11,8 +11,8 @@ const Sketch = dynamic(() => import("react-p5"), { ssr: false });
 
 const numInnerElectrons = 12;
 const numOuterElectrons = 20;
-const innerRadius = 250;
-const outerRadius = 400;
+const innerRadius = 200;
+const outerRadius = 320;
 
 const ElectronOrbit: FC = () => {
   const [clickedImage, setClickedImage] = useState<string | null>(null);
@@ -53,7 +53,7 @@ const ElectronOrbit: FC = () => {
   };
 
   const draw = (p5: p5Types) => {
-    p5.background(233, 226, 197);
+    p5.background(25, 25, 25);
     p5.translate(p5.width / 2, p5.height / 2);
 
     // Draw image in the middle
@@ -176,10 +176,11 @@ const ElectronOrbit: FC = () => {
 
   return (
     <>
-      <Sketch preload={preload} setup={setup} draw={draw} />
-      <p className="absolute left-0 top-1/2 transform -rotate-90 origin-center text-black text-5xl">
+      <p className="fixed -left-60 top-1/2 transform -rotate-90 origin-center text-[#fff3cc] text-5xl">
         MY ANALOG LIBRARY - 2024
       </p>
+      <Sketch preload={preload} setup={setup} draw={draw} />
+
       {clickedImage && (
         <div
           className=" w-fit h-[90%] p-5
