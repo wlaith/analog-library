@@ -62,35 +62,17 @@ const ElectronOrbit: FC = () => {
       p5.image(middleImageRef.current, 0, 0, 200, 200);
     }
 
-    const { inner, outer } = imagesRef.current;
-
-    // Clear previously appended images
-    const existingImages = document.querySelectorAll(".electron-image");
-    existingImages.forEach((img) => img.remove());
-
     // Draw inner orbit electrons
     for (let i = 0; i < numInnerElectrons; i++) {
       const angle = p5.frameCount * 0.4 + (i * 360) / numInnerElectrons;
       const x = p5.cos(angle) * innerRadius;
       const y = p5.sin(angle) * innerRadius;
-      p5.imageMode(p5.CENTER);
-      p5.noFill();
-      p5.noStroke();
-      p5.rectMode(p5.CENTER);
-      p5.rect(x, y, 100, 100);
 
-      const imgElement = document.createElement("img");
-      imgElement.src = `/images/12-pictures/${i}.jpg`;
-      imgElement.style.position = "absolute";
-      imgElement.style.left = `${p5.width / 2 + x - 50}px`;
-      imgElement.style.top = `${p5.height / 2 + y - 50}px`;
-      imgElement.style.width = "100px";
-      imgElement.style.borderRadius = "50%";
-      imgElement.style.height = "100px";
-      imgElement.style.pointerEvents = "none"; // Make sure the image doesn't interfere with p5.js mouse events
-      imgElement.classList.add("electron-image"); // Add a class for easy selection
-
-      document.body.appendChild(imgElement);
+      const imgElement = document.getElementById(`inner-electron-${i}`);
+      if (imgElement) {
+        imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+        imgElement.style.top = `${p5.height / 2 + y - 50}px`;
+      }
     }
 
     // Draw outer orbit electrons
@@ -98,24 +80,12 @@ const ElectronOrbit: FC = () => {
       const angle = p5.frameCount * 0.3 + (i * 360) / numOuterElectrons;
       const x = p5.cos(angle) * outerRadius;
       const y = p5.sin(angle) * outerRadius;
-      p5.imageMode(p5.CENTER);
-      p5.noFill();
-      p5.noStroke();
-      p5.rectMode(p5.CENTER);
-      p5.rect(x, y, 100, 100);
 
-      const imgElement = document.createElement("img");
-      imgElement.src = `/images/20-pictures/${i}.jpg`;
-      imgElement.style.position = "absolute";
-      imgElement.style.left = `${p5.width / 2 + x - 50}px`;
-      imgElement.style.top = `${p5.height / 2 + y - 50}px`;
-      imgElement.style.width = "100px";
-      imgElement.style.borderRadius = "50%";
-      imgElement.style.height = "100px";
-      imgElement.style.pointerEvents = "none"; // Make sure the image doesn't interfere with p5.js mouse events
-      imgElement.classList.add("electron-image"); // Add a class for easy selection
-
-      document.body.appendChild(imgElement);
+      const imgElement = document.getElementById(`outer-electron-${i}`);
+      if (imgElement) {
+        imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+        imgElement.style.top = `${p5.height / 2 + y - 50}px`;
+      }
     }
 
     // Click detection
@@ -157,6 +127,51 @@ const ElectronOrbit: FC = () => {
 
     window.addEventListener("resize", debounceResize);
     return () => window.removeEventListener("resize", debounceResize);
+  }, []);
+
+  useEffect(() => {
+    // Create image elements once and reuse them
+    const createImageElements = () => {
+      for (let i = 0; i < numInnerElectrons; i++) {
+        const imgElement = document.createElement("img");
+        imgElement.id = `inner-electron-${i}`;
+        imgElement.src = `/images/12-pictures/${i}.jpg`;
+        imgElement.style.position = "absolute";
+        imgElement.style.width = "100px";
+        imgElement.style.height = "100px";
+        imgElement.style.borderRadius = "50%";
+        imgElement.style.objectFit = "cover"; // Ensure the image does not skew
+        imgElement.style.pointerEvents = "none";
+        document.body.appendChild(imgElement);
+      }
+      for (let i = 0; i < numOuterElectrons; i++) {
+        const imgElement = document.createElement("img");
+        imgElement.id = `outer-electron-${i}`;
+        imgElement.src = `/images/20-pictures/${i}.jpg`;
+        imgElement.style.position = "absolute";
+        imgElement.style.width = "100px";
+        imgElement.style.borderRadius = "50%";
+        imgElement.style.objectFit = "cover"; // Ensure the image does not skew
+
+        imgElement.style.height = "100px";
+        imgElement.style.pointerEvents = "none";
+        document.body.appendChild(imgElement);
+      }
+    };
+
+    createImageElements();
+
+    return () => {
+      // Cleanup image elements on component unmount
+      for (let i = 0; i < numInnerElectrons; i++) {
+        const imgElement = document.getElementById(`inner-electron-${i}`);
+        if (imgElement) imgElement.remove();
+      }
+      for (let i = 0; i < numOuterElectrons; i++) {
+        const imgElement = document.getElementById(`outer-electron-${i}`);
+        if (imgElement) imgElement.remove();
+      }
+    };
   }, []);
 
   return (
