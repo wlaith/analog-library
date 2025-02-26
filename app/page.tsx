@@ -10,7 +10,7 @@ const Sketch = dynamic(() => import("react-p5"), { ssr: false });
 
 const numInnerElectrons = 12;
 const numOuterElectrons = 20;
-const innerRadius = 200;
+const innerRadius = 250;
 const outerRadius = 400;
 
 const ElectronOrbit: FC = () => {
@@ -23,13 +23,22 @@ const ElectronOrbit: FC = () => {
   const maskRef = useRef<p5Types.Graphics | null>(null); // Store the mask reference
 
   const preload = (p5: p5Types) => {
-    imagesRef.current.inner = Array.from({ length: numInnerElectrons }, () =>
-      p5.loadImage("/Untitled_Artwork_12-01.jpg")
+    imagesRef.current.inner = Array.from(
+      { length: numInnerElectrons },
+      (_, i) => {
+        const path = `/images/12-pictures/${i}.jpg`;
+        console.log(`Loading inner image: ${path}`);
+        return p5.loadImage(path);
+      }
     );
 
     imagesRef.current.outer = Array.from(
       { length: numOuterElectrons },
-      (_, i) => p5.loadImage(`/images/20-pictures/${i}.jpg`)
+      (_, i) => {
+        const path = `/images/20-pictures/${i}.jpg`;
+        console.log(`Loading outer image: ${path}`);
+        return p5.loadImage(path);
+      }
     );
 
     // Create a single mask for outer electrons
@@ -61,14 +70,17 @@ const ElectronOrbit: FC = () => {
       const x = p5.cos(angle) * innerRadius;
       const y = p5.sin(angle) * innerRadius;
       p5.imageMode(p5.CENTER);
-      p5.image(img, x, y, 70, 70);
+
+      // Apply the precomputed mask
+      if (maskRef.current) img.mask(maskRef.current);
+      p5.image(img, x, y, 100, 100);
 
       // Check for click
       if (
         p5.mouseIsPressed &&
         p5.dist(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2, x, y) < 35
       ) {
-        setClickedImage("/Untitled_Artwork_12-01.jpg");
+        setClickedImage(`/images/12-pictures/${i}.jpg`);
       }
     });
 
