@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { FC, useEffect, useRef, useState } from "react";
@@ -21,25 +22,23 @@ const ElectronOrbit: FC = () => {
   });
 
   const maskRef = useRef<p5Types.Graphics | null>(null); // Store the mask reference
+  const middleImageRef = useRef<p5Types.Image | null>(null); // Store the middle image reference
 
   const preload = (p5: p5Types) => {
-    imagesRef.current.inner = Array.from(
-      { length: numInnerElectrons },
-      (_, i) => {
-        const path = `/images/12-pictures/${i}.jpg`;
-        console.log(`Loading inner image: ${path}`);
-        return p5.loadImage(path);
-      }
-    );
+    // Load the middle image
+    middleImageRef.current = p5.loadImage("/images/roll.png");
 
-    imagesRef.current.outer = Array.from(
-      { length: numOuterElectrons },
-      (_, i) => {
-        const path = `/images/20-pictures/${i}.jpg`;
-        console.log(`Loading outer image: ${path}`);
-        return p5.loadImage(path);
-      }
-    );
+    // Load inner and outer electron images
+    for (let i = 0; i < numInnerElectrons; i++) {
+      const path = `/images/12-pictures/${i}.jpg`;
+      imagesRef.current.inner[i] = p5.loadImage(path);
+      if (maskRef.current) imagesRef.current.inner[i].mask(maskRef.current);
+    }
+    for (let i = 0; i < numOuterElectrons; i++) {
+      const path = `/images/20-pictures/${i}.jpg`;
+      imagesRef.current.outer[i] = p5.loadImage(path);
+      if (maskRef.current) imagesRef.current.outer[i].mask(maskRef.current);
+    }
 
     // Create a single mask for outer electrons
     maskRef.current = p5.createGraphics(100, 100);
@@ -54,72 +53,118 @@ const ElectronOrbit: FC = () => {
   };
 
   const draw = (p5: p5Types) => {
-    p5.background(21, 21, 21);
+    p5.background(233, 226, 197);
     p5.translate(p5.width / 2, p5.height / 2);
 
-    // Draw nucleus
-    p5.fill(0, 191, 255);
-    p5.noStroke();
-    p5.ellipse(0, 0, 50);
+    // Draw image in the middle
+    if (middleImageRef.current) {
+      p5.imageMode(p5.CENTER);
+      p5.image(middleImageRef.current, 0, 0, 200, 200);
+    }
 
     const { inner, outer } = imagesRef.current;
 
+    // Clear previously appended images
+    const existingImages = document.querySelectorAll(".electron-image");
+    existingImages.forEach((img) => img.remove());
+
     // Draw inner orbit electrons
-    inner.forEach((img, i) => {
+    for (let i = 0; i < numInnerElectrons; i++) {
       const angle = p5.frameCount * 0.4 + (i * 360) / numInnerElectrons;
       const x = p5.cos(angle) * innerRadius;
       const y = p5.sin(angle) * innerRadius;
       p5.imageMode(p5.CENTER);
+      p5.noFill();
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+      p5.rect(x, y, 100, 100);
 
-      // Apply the precomputed mask
-      if (maskRef.current) img.mask(maskRef.current);
-      p5.image(img, x, y, 100, 100);
+      const imgElement = document.createElement("img");
+      imgElement.src = `/images/12-pictures/${i}.jpg`;
+      imgElement.style.position = "absolute";
+      imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+      imgElement.style.top = `${p5.height / 2 + y - 50}px`;
+      imgElement.style.width = "100px";
+      imgElement.style.borderRadius = "50%";
+      imgElement.style.height = "100px";
+      imgElement.style.pointerEvents = "none"; // Make sure the image doesn't interfere with p5.js mouse events
+      imgElement.classList.add("electron-image"); // Add a class for easy selection
 
-      // Check for click
-      if (
-        p5.mouseIsPressed &&
-        p5.dist(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2, x, y) < 35
-      ) {
-        setClickedImage(`/images/12-pictures/${i}.jpg`);
-      }
-    });
+      document.body.appendChild(imgElement);
+    }
 
-    // Draw outer orbit electrons (pre-masked images)
-    outer.forEach((img, i) => {
+    // Draw outer orbit electrons
+    for (let i = 0; i < numOuterElectrons; i++) {
       const angle = p5.frameCount * 0.3 + (i * 360) / numOuterElectrons;
       const x = p5.cos(angle) * outerRadius;
       const y = p5.sin(angle) * outerRadius;
       p5.imageMode(p5.CENTER);
+      p5.noFill();
+      p5.noStroke();
+      p5.rectMode(p5.CENTER);
+      p5.rect(x, y, 100, 100);
 
-      // Apply the precomputed mask
-      if (maskRef.current) img.mask(maskRef.current);
-      p5.image(img, x, y, 100, 100);
+      const imgElement = document.createElement("img");
+      imgElement.src = `/images/20-pictures/${i}.jpg`;
+      imgElement.style.position = "absolute";
+      imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+      imgElement.style.top = `${p5.height / 2 + y - 50}px`;
+      imgElement.style.width = "100px";
+      imgElement.style.borderRadius = "50%";
+      imgElement.style.height = "100px";
+      imgElement.style.pointerEvents = "none"; // Make sure the image doesn't interfere with p5.js mouse events
+      imgElement.classList.add("electron-image"); // Add a class for easy selection
 
-      // Check for click
-      if (
-        p5.mouseIsPressed &&
-        p5.dist(p5.mouseX - p5.width / 2, p5.mouseY - p5.height / 2, x, y) < 50
-      ) {
-        setClickedImage(`/images/20-pictures/${i}.jpg`);
+      document.body.appendChild(imgElement);
+    }
+
+    // Click detection
+    if (p5.mouseIsPressed) {
+      const mouseXTranslated = p5.mouseX - p5.width / 2;
+      const mouseYTranslated = p5.mouseY - p5.height / 2;
+
+      // Check inner electrons
+      for (let i = 0; i < numInnerElectrons; i++) {
+        const angle = p5.frameCount * 0.4 + (i * 360) / numInnerElectrons;
+        const x = p5.cos(angle) * innerRadius;
+        const y = p5.sin(angle) * innerRadius;
+        if (p5.dist(mouseXTranslated, mouseYTranslated, x, y) < 35) {
+          setClickedImage(`/images/12-pictures/${i}.jpg`);
+          break;
+        }
       }
-    });
+
+      // Check outer electrons
+      for (let i = 0; i < numOuterElectrons; i++) {
+        const angle = p5.frameCount * 0.3 + (i * 360) / numOuterElectrons;
+        const x = p5.cos(angle) * outerRadius;
+        const y = p5.sin(angle) * outerRadius;
+        if (p5.dist(mouseXTranslated, mouseYTranslated, x, y) < 50) {
+          setClickedImage(`/images/20-pictures/${i}.jpg`);
+          break;
+        }
+      }
+    }
   };
 
   useEffect(() => {
-    const handleResize = () => {
+    const debounceResize = debounce(() => {
       const p5Instance = Sketch.p5Instance;
       if (p5Instance) {
         p5Instance.resizeCanvas(window.innerWidth, window.innerHeight);
       }
-    };
+    }, 100);
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", debounceResize);
+    return () => window.removeEventListener("resize", debounceResize);
   }, []);
 
   return (
     <>
       <Sketch preload={preload} setup={setup} draw={draw} />
+      <p className="absolute left-0 top-1/2 transform -rotate-90 origin-center text-black text-5xl">
+        MY ANALOG LIBRARY - 2024
+      </p>
       {clickedImage && (
         <div
           className=" w-fit h-[90%] p-5
@@ -153,4 +198,13 @@ const ElectronOrbit: FC = () => {
   );
 };
 
-export default ElectronOrbit;
+// Debounce utility function
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout;
+  return function (...args: any[]) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(null, args), wait);
+  };
+}
+
+export default React.memo(ElectronOrbit);
