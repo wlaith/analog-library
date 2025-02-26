@@ -19,3 +19,24 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer utilities {
+  @keyframes rotate-orbit {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+
+  .animate-electron {
+    @apply absolute;
+    animation: rotate-orbit 10s infinite linear;
+  }
+
+  .animate-electron-outer {
+    @apply absolute;
+    animation: rotate-orbit 15s infinite linear;
+  }
+}
