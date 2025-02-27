@@ -1,12 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FC, useEffect, useRef, useState } from "react";
 import p5Types from "p5";
 
-// Load p5 dynamically to avoid SSR issues in Next.js
 const Sketch = dynamic(() => import("react-p5"), { ssr: false });
 
 const numInnerElectrons = 12;
@@ -21,28 +19,30 @@ const ElectronOrbit: FC = () => {
     outer: [],
   });
 
-  const maskRef = useRef<p5Types.Graphics | null>(null); // Store the mask reference
-  const middleImageRef = useRef<p5Types.Image | null>(null); // Store the middle image reference
+  const maskRef = useRef<p5Types.Graphics | null>(null); // Cache the mask
+  const middleImageRef = useRef<p5Types.Image | null>(null);
 
   const preload = (p5: p5Types) => {
     // Load the middle image
     middleImageRef.current = p5.loadImage("/images/roll.png");
 
-    // Load inner and outer electron images
+    // Create the mask once and reuse it
+    maskRef.current = p5.createGraphics(100, 100);
+    maskRef.current.ellipse(50, 50, 100, 100); // Create a circular mask
+
+    // Load inner electron images and apply the cached mask
     for (let i = 0; i < numInnerElectrons; i++) {
       const path = `/images/12-pictures/${i}.jpg`;
       imagesRef.current.inner[i] = p5.loadImage(path);
-      if (maskRef.current) imagesRef.current.inner[i].mask(maskRef.current);
+      imagesRef.current.inner[i].mask(maskRef.current); // Apply the cached mask
     }
+
+    // Load outer electron images and apply the cached mask
     for (let i = 0; i < numOuterElectrons; i++) {
       const path = `/images/20-pictures/${i}.jpg`;
       imagesRef.current.outer[i] = p5.loadImage(path);
-      if (maskRef.current) imagesRef.current.outer[i].mask(maskRef.current);
+      imagesRef.current.outer[i].mask(maskRef.current); // Apply the cached mask
     }
-
-    // Create a single mask for outer electrons
-    maskRef.current = p5.createGraphics(100, 100);
-    maskRef.current.ellipse(50, 50, 100, 100);
   };
 
   const setup = (p5: p5Types, canvasParentRef: Element) => {
@@ -56,13 +56,22 @@ const ElectronOrbit: FC = () => {
     p5.background(25, 25, 25);
     p5.translate(p5.width / 2, p5.height / 2);
 
-    // Draw image in the middle
-    if (middleImageRef.current) {
-      p5.imageMode(p5.CENTER);
-      p5.image(middleImageRef.current, 0, 0, 200, 200);
+    const circles_space = 300;
+    for (let i = 0; i < 7; i++) {
+      // Draw a circle
+      p5.noFill();
+      p5.stroke(45);
+      p5.strokeWeight(2);
+      p5.ellipse(270, 0, i * circles_space, i * circles_space);
     }
 
-    // Draw inner orbit electrons
+    // Draw the middle image
+    if (middleImageRef.current) {
+      p5.imageMode(p5.CENTER);
+      p5.image(middleImageRef.current, 270, 0, 200, 200);
+    }
+
+    // Update positions of inner electrons
     for (let i = 0; i < numInnerElectrons; i++) {
       const angle = p5.frameCount * 0.4 + (i * 360) / numInnerElectrons;
       const x = p5.cos(angle) * innerRadius;
@@ -70,12 +79,12 @@ const ElectronOrbit: FC = () => {
 
       const imgElement = document.getElementById(`inner-electron-${i}`);
       if (imgElement) {
-        imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+        imgElement.style.left = `${p5.width / 2 + x + 220}px`;
         imgElement.style.top = `${p5.height / 2 + y - 50}px`;
       }
     }
 
-    // Draw outer orbit electrons
+    // Update positions of outer electrons
     for (let i = 0; i < numOuterElectrons; i++) {
       const angle = p5.frameCount * 0.3 + (i * 360) / numOuterElectrons;
       const x = p5.cos(angle) * outerRadius;
@@ -83,14 +92,14 @@ const ElectronOrbit: FC = () => {
 
       const imgElement = document.getElementById(`outer-electron-${i}`);
       if (imgElement) {
-        imgElement.style.left = `${p5.width / 2 + x - 50}px`;
+        imgElement.style.left = `${p5.width / 2 + x + 220}px`;
         imgElement.style.top = `${p5.height / 2 + y - 50}px`;
       }
     }
 
     // Click detection
     if (p5.mouseIsPressed) {
-      const mouseXTranslated = p5.mouseX - p5.width / 2;
+      const mouseXTranslated = p5.mouseX - p5.width / 2 - 270;
       const mouseYTranslated = p5.mouseY - p5.height / 2;
 
       // Check inner electrons
@@ -140,7 +149,7 @@ const ElectronOrbit: FC = () => {
         imgElement.style.width = "100px";
         imgElement.style.height = "100px";
         imgElement.style.borderRadius = "50%";
-        imgElement.style.objectFit = "cover"; // Ensure the image does not skew
+        imgElement.style.objectFit = "cover";
         imgElement.style.pointerEvents = "none";
         document.body.appendChild(imgElement);
       }
@@ -150,10 +159,9 @@ const ElectronOrbit: FC = () => {
         imgElement.src = `/images/20-pictures/${i}.jpg`;
         imgElement.style.position = "absolute";
         imgElement.style.width = "100px";
-        imgElement.style.borderRadius = "50%";
-        imgElement.style.objectFit = "cover"; // Ensure the image does not skew
-
         imgElement.style.height = "100px";
+        imgElement.style.borderRadius = "50%";
+        imgElement.style.objectFit = "cover";
         imgElement.style.pointerEvents = "none";
         document.body.appendChild(imgElement);
       }
@@ -176,45 +184,37 @@ const ElectronOrbit: FC = () => {
 
   return (
     <>
-      <p className="fixed -left-60 top-1/2 transform -rotate-90 origin-center text-[#fff3cc] text-5xl">
-        MY ANALOG LIBRARY - 2024
-      </p>
-      <Sketch preload={preload} setup={setup} draw={draw} />
-
-      {clickedImage && (
-        <div
-          className=" w-fit h-[90%] p-5
-           border-white border-[0.5px] rounded-lg shadow-xl"
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.2)", // 20% opacity
-          }}
-        >
-          <button
-            className="absolute top-2 right-2 p-2 bg-white rounded-full"
-            onClick={() => setClickedImage(null)}
-          ></button>
-          <Image
-            className="max-w-[100%] max-h-[80%] w-fit"
-            src={clickedImage}
-            alt="Clicked image"
-            width="4000"
-            height="900"
-            objectFit="contain"
-          />
+      <div className="fixed left-0 p-14 flex flex-col gap-8 top-0 max-h-[90%] w-[40%] text-[#ebebeb]">
+        <div className="w-fill flex gap-2">
+          <p className="text-start w-1/2 font-bold text-5xl">ANALOG LIBRARY</p>
+          <div className="w-1/2">
+            <p className=" text-3xl">SEP-OCT</p>
+            <p className=" text-3xl">2024</p>
+          </div>
         </div>
-      )}
+        {clickedImage && (
+          <div className="p-4 w-fit h-fit border-white border-[0.2px] rounded-2xl shadow-xl flex flex-col gap-3 bg-[rgba(255,255,255,0.1)]">
+            <button
+              className="w-2 f-2 p-2 bg-[#ec6a5f] rounded-full"
+              onClick={() => setClickedImage(null)}
+            ></button>
+            <Image
+              className="rounded-md"
+              src={clickedImage}
+              alt="Clicked image"
+              width="330"
+              height="300"
+              objectFit="contain"
+            />
+          </div>
+        )}
+      </div>
+
+      <Sketch preload={preload} setup={setup} draw={draw} />
     </>
   );
 };
 
-// Debounce utility function
 function debounce(func: Function, wait: number) {
   let timeout: NodeJS.Timeout;
   return function (...args: any[]) {
