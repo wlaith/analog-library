@@ -3,7 +3,8 @@
 This project is an idea of how we can share developed analog pictures of film rolls. It is a React-based visualization of pictures orbiting a central point, inspired by atomic structures. It uses the `p5.js` library for rendering the animation and managing interactions. The electrons are represented as circular images that orbit around a central image, and users can click on individual electrons to view a larger version of the image.
 
 
-https://github.com/user-attachments/assets/0b6212ca-dce8-40da-b4b7-4972ce532f49
+https://github.com/user-attachments/assets/3561588b-493d-4195-8c24-70ee35220064
+
 
 
 ## Features
