@@ -184,8 +184,8 @@ const ElectronOrbit: FC = () => {
 
   return (
     <>
-      <div className="fixed left-0 p-14 flex flex-col gap-8 top-0 max-h-[90%] w-[40%] text-[#ebebeb]">
-        <div className="w-fill flex gap-2">
+      <div className="absolute left-0 p-14 flex flex-col gap-8 top-0 max-h-[90%] w-[40%] text-[#ebebeb]">
+        <div className="w-fill max-md:hidden flex gap-2">
           <p className="text-start w-1/2 font-bold text-5xl">ANALOG LIBRARY</p>
           <div className="w-1/2">
             <p className=" text-3xl">SEP-OCT</p>
@@ -193,17 +193,17 @@ const ElectronOrbit: FC = () => {
           </div>
         </div>
         {clickedImage && (
-          <div className="p-4 w-fit h-fit border-white border-[0.2px] rounded-2xl shadow-xl flex flex-col gap-3 bg-[rgba(255,255,255,0.1)]">
+          <div className="p-4 max-md:absolute max-md:w-[80vw] max-w-[30] w-fit h-fit border-white border-[0.2px] rounded-2xl shadow-xl flex flex-col gap-3 bg-[rgba(255,255,255,0.1)] z-50">
             <button
               className="w-2 f-2 p-2 bg-[#ec6a5f] rounded-full"
               onClick={() => setClickedImage(null)}
             ></button>
             <Image
-              className="rounded-md"
+              className="rounded-md max-lg:w-[80vw]"
               src={clickedImage}
               alt="Clicked image"
-              width="330"
-              height="300"
+              width="350"
+              height="200"
               objectFit="contain"
             />
           </div>
