@@ -1,6 +1,6 @@
 # Electron Orbit Visualization
 
-This project is a React-based visualization of electrons orbiting a central nucleus, inspired by atomic structures. It uses the `p5.js` library for rendering the animation and managing interactions. The electrons are represented as circular images that orbit around a central image, and users can click on individual electrons to view a larger version of the image.
+This project is an idea of how we can share developed analog pictures of film rolls. It is a React-based visualization of pictures orbiting a central point, inspired by atomic structures. It uses the `p5.js` library for rendering the animation and managing interactions. The electrons are represented as circular images that orbit around a central image, and users can click on individual electrons to view a larger version of the image.
 
 ## Features
 
