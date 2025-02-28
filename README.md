@@ -12,11 +12,6 @@ This project is an idea of how we can share developed analog pictures of film ro
   - Click on an electron to display a larger version of the image.
   - Close the enlarged image with a button.
 
-- **Responsive Design**:
-
-  - The canvas resizes dynamically with the window size.
-  - Optimized for both desktop and mobile views.
-
 - **Image Masking**:
 
   - Electron images are masked into circular shapes using `p5.Graphics`.
